@@ -1,19 +1,14 @@
 import { db } from "../config/db.js";
 
-export default class Donation {
+export default class CaseUpdate {
 
     static create(data) {
         const sql = `
-            INSERT INTO donations 
-            (case_id, donor_id, amount, donated_at) 
-            VALUES (?, ?, ?, NOW())
+            INSERT INTO case_updates (case_id, update_text)
+            VALUES (?, ?)
         `;
 
-        const values = [
-            data.case_id,
-            data.donor_id,
-            data.amount
-        ];
+        const values = [data.case_id, data.update_text];
 
         return new Promise((resolve, reject) => {
             db.query(sql, values, (err, result) => {
@@ -23,13 +18,12 @@ export default class Donation {
         });
     }
 
-    static findByCase(case_id) {
+    static getByCase(case_id) {
         const sql = `
-            SELECT d.*, u.fullname AS donor_name
-            FROM donations d
-            JOIN users u ON d.donor_id = u.id
-            WHERE d.case_id = ?
-            ORDER BY donated_at DESC
+            SELECT id, update_text, update_date
+            FROM case_updates
+            WHERE case_id = ?
+            ORDER BY update_date DESC
         `;
 
         return new Promise((resolve, reject) => {

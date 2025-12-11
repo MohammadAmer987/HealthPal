@@ -3,9 +3,9 @@ import authRoutes from './routes/auth.routes.js';
 import caseRoutes from "./routes/cases.routes.js";
 import donationRoutes from "./routes/donations.routes.js";
 import caseUpdatesRoutes from "./routes/caseupdates.routes.js";
-import doctorRoutes from './src/routes/doctors.routes.js';
-import messageRoutes from './src/routes/messages.routes.js';
-import consultationRoutes from './src/routes/consultations.routes.js';
+import doctorRoutes from './routes/doctors.routes.js';
+import messageRoutes from './routes/messages.routes.js';
+import consultationRoutes from './routes/consultations.routes.js';
 
 
 

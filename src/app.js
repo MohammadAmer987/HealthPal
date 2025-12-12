@@ -11,6 +11,9 @@ import doctorRoutes from './routes/doctors.routes.js';
 import messageRoutes from './routes/messages.routes.js';
 import consultationRoutes from './routes/consultations.routes.js';
 import surgicalMissionRoutes from "./routes/surgicalMission.routes.js";
+import medRequestRoutes from "./routes/medRequest.routes.js";
+import medicineSupplyRoutes from "./routes/medicineSupply.routes.js";
+
 const app = express();
 
 app.use(express.json());
@@ -26,5 +29,7 @@ app.use('/doctors', doctorRoutes);
 app.use('/messages', messageRoutes);
 app.use('/consultations', consultationRoutes);
 app.use("/missions", surgicalMissionRoutes);
+app.use("/med-requests", medRequestRoutes);
+app.use("/medicine-supply", medicineSupplyRoutes);
 
 export default app;

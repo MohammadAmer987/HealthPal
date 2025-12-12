@@ -6,22 +6,24 @@ import {
   registerToMission,
   updateRegistrationStatus
 } from "../controllers/surgicalMission.controller.js";
+import { allowRoles, auth } from "../middleware/auth.js";
+import { all } from "axios";
 
 const router = express.Router();
 
 // NGO creates mission
-router.post("/", createMission);
+router.post("/",auth,allowRoles("ngo"), createMission);
 
 // Get all missions
-router.get("/", getMissions);
+router.get("/",auth ,getMissions);
 
 // Get upcoming missions
-router.get("/upcoming", getUpcomingMissions);
+router.get("/upcoming",auth, getUpcomingMissions);
 
 // Patient registers to mission
-router.post("/register", registerToMission);
+router.post("/register",auth,allowRoles("patient"), registerToMission);
 
 // NGO approves or rejects patient
-router.patch("/registration/:id", updateRegistrationStatus);
+router.patch("/registration/:id",auth,allowRoles("ngo"), updateRegistrationStatus);
 
 export default router;

@@ -11,41 +11,49 @@ export default function invoiceTemplate(data) {
     remaining,
   } = data;
 
-  const donationRows = donations
-    .map(
-      (d) => `
-      <tr>
-        <td>${d.donor_name}</td>
-        <td>$${d.amount}</td>
-        <td>${d.date}</td>
-      </tr>
-    `
-    )
-    .join("");
+  const donationRows = (donations && donations.length > 0)
+    ? donations
+        .map(
+          (d) => `
+          <tr>
+            <td>${d.donor_name || 'Anonymous'}</td>
+            <td>$${d.amount || 0}</td>
+            <td>${d.donated_at ? new Date(d.donated_at).toLocaleDateString() : 'N/A'}</td>
+          </tr>
+        `
+        )
+        .join("")
+    : "<tr><td colspan='3'>No donations yet</td></tr>";
 
-  const expenseRows = expenses
-    .map(
-      (e) => `
-      <tr>
-        <td>${e.description}</td>
-        <td>$${e.amount_used}</td>
-        <td>${e.expense_date}</td>
-      </tr>
-    `
-    )
-    .join("");
+  const expenseRows = (expenses && expenses.length > 0)
+    ? expenses
+        .map(
+          (e) => `          node server.js
+          <tr>
+            <td>${e.description || 'N/A'}</td>
+            <td>$${e.amount_used || 0}</td>
+            <td>${e.expense_date ? new Date(e.expense_date).toLocaleDateString() : 'N/A'}</td>
+          </tr>
+        `
+        )
+        .join("")
+    : "<tr><td colspan='3'>No expenses recorded</td></tr>";
 
-  const updateRows = updates
-    .map(
-      (u) => `<li><b>${u.update_date}:</b> ${u.update_text}</li>`
-    )
-    .join("");
+  const updateRows = (updates && updates.length > 0)
+    ? updates
+        .map(
+          (u) => `<li><b>${u.update_date ? new Date(u.update_date).toLocaleDateString() : 'N/A'}:</b> ${u.update_text || 'N/A'}</li>`
+        )
+        .join("")
+    : "<li>No updates available</li>";
 
-  const feedbackRows = feedback
-    .map(
-      (f) => `<li><b>${f.created_at}:</b> ★${f.rating} — ${f.feedback}</li>`
-    )
-    .join("");
+  const feedbackRows = (feedback && feedback.length > 0)
+    ? feedback
+        .map(
+          (f) => `<li><b>${f.created_at ? new Date(f.created_at).toLocaleDateString() : 'N/A'}:</b> ★${f.rating || 0} — ${f.feedback || 'N/A'}</li>`
+        )
+        .join("")
+    : "<li>No feedback available</li>";
 
   return `
 <html>
@@ -67,16 +75,16 @@ export default function invoiceTemplate(data) {
 </div>
 
 <h2>Patient Information</h2>
-<p><b>Name:</b> ${patient.full_name}</p>
-<p><b>Birth Date:</b> ${patient.birth_date}</p>
+<p><b>Name:</b> ${patient?.full_name || 'N/A'}</p>
+<p><b>Birth Date:</b> ${patient?.birth_date || 'N/A'}</p>
 
 <h2>Case Details</h2>
-<p><b>Title:</b> ${caseInfo.title}</p>
-<p><b>Description:</b> ${caseInfo.description}</p>
-<p><b>Goal:</b> $${caseInfo.goal_amount}</p>
-<p><b>Donated:</b> $${total_donated}</p>
-<p><b>Used:</b> $${total_used}</p>
-<p><b>Remaining:</b> $${remaining}</p>
+<p><b>Title:</b> ${caseInfo?.title || 'N/A'}</p>
+<p><b>Description:</b> ${caseInfo?.description || 'N/A'}</p>
+<p><b>Goal:</b> $${caseInfo?.goal_amount || 0}</p>
+<p><b>Donated:</b> $${total_donated || 0}</p>
+<p><b>Used:</b> $${total_used || 0}</p>
+<p><b>Remaining:</b> $${remaining || 0}</p>
 
 <h2>Donations</h2>
 <table>

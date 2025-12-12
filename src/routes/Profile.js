@@ -1,6 +1,6 @@
 import express from 'express';
 
-import usersRouter from './profile/User.js';
+import usersRouter from './profile/users.routes.js';
 import authRouter from './profile/auth.js';
 
 //! create a router

@@ -5,12 +5,13 @@ import {
   deleteAvailability,
   getAllAvailability,
 } from "../controllers/doctorAvailability.controller.js";
+import { allowRoles,auth } from "../middleware/auth.js";
 
 const router = express.Router();
 
-router.post("/", addAvailability);
-router.get("/doctor/:doctor_id", getDoctorAvailability);
-router.delete("/:id", deleteAvailability);
-router.get("/", getAllAvailability);
+router.post("/",auth,allowRoles("doctor"), addAvailability);
+router.get("/doctor/:doctor_id",auth, getDoctorAvailability);
+router.delete("/:id",auth,allowRoles("doctor"), deleteAvailability);
+router.get("/",auth, getAllAvailability);
 
 export default router;

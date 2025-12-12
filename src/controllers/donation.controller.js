@@ -4,16 +4,21 @@ import MedicalCase from "../models/MedicalCase.js";
 // -------------------- Add Donation ------------------------
 export const addDonation = async (req, res) => {
     try {
-        const { case_id, donor_id, amount } = req.body;
+        const { case_id, donor_id } = req.body;
+        let { amount } = req.body;
 
         // -------------- Validation ----------------
-        if (!case_id || !donor_id || !amount) {
+        if (case_id == null || donor_id == null || amount == null) {
             return res.status(400).json({ message: "All fields are required" });
         }
 
-        if (Number.isNaN(amount) || amount <= 0) {
+        // Normalize and validate numeric amount
+        const amt = Number(amount);
+        if (Number.isNaN(amt) || amt <= 0) {
             return res.status(400).json({ message: "Amount must be a positive number" });
         }
+        // overwrite amount with numeric value for downstream calls
+        amount = amt;
 
         // -------------- Check if case exists ----------------
         const caseData = await MedicalCase.findById(case_id);
@@ -28,22 +33,31 @@ export const addDonation = async (req, res) => {
         }
 
         // -------------- Prevent exceeding goal amount ----------------
-        if (caseData.current_amount + Number(amount) > caseData.goal_amount) {
-            return res.status(400).json({
-                message: "Donation exceeds goal amount"
-            });
+        // Use integer cents to avoid floating point precision issues
+        const current = Number(caseData.current_amount) || 0;
+        const goal = Number(caseData.goal_amount) || 0;
+        const currentCents = Math.round(current * 100);
+        const amtCents = Math.round(amount * 100);
+        const goalCents = Math.round(goal * 100);
+
+        if (currentCents + amtCents > goalCents) {
+            return res.status(400).json({ message: "Donation exceeds goal amount" });
         }
 
         // -------------- Create Donation ----------------
         const result = await Donation.create({ case_id, donor_id, amount });
 
         // -------------- Update Case Amount ----------------
+        // Note: this is not atomic; consider moving to a DB transaction or
+        // an atomic UPDATE that checks current_amount + ? <= goal_amount
         await MedicalCase.updateCurrentAmount(case_id, amount);
 
-        // If goal achieved → set funded
+        // If goal achieved → set funded (use numeric comparison)
         const updatedCase = await MedicalCase.findById(case_id);
+        const updatedCurrent = Number(updatedCase.current_amount) || 0;
+        const updatedGoal = Number(updatedCase.goal_amount) || 0;
 
-        if (updatedCase.current_amount === updatedCase.goal_amount) {
+        if (updatedCurrent >= updatedGoal) {
             await MedicalCase.updateStatus(case_id, "funded");
         }
 

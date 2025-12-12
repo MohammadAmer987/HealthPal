@@ -9,3 +9,13 @@ export const getLocationByName = (name) => {
     });
   });
 };
+
+export const getLocationById = (id) => {
+  return new Promise((resolve, reject) => {
+    const sql = "SELECT * FROM locations WHERE id = ?";
+    db.query(sql, [id], (err, results) => {
+      if (err) return reject(err);
+      resolve(results[0]);
+    });
+  });
+};

@@ -37,14 +37,12 @@ try {
 	console.error('Failed to create logs directory', e);
 }
 
-// Replace console methods to use Winston logger so existing console.* calls
-// across the codebase are captured in log files as well.
-/* eslint-disable no-console */
+
 console.log = (...args) => logger.info(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
 console.info = (...args) => logger.info(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
 console.warn = (...args) => logger.warn(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
 console.error = (...args) => logger.error(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
-/* eslint-enable no-console */
+
 
 // Request logging middleware: logs method, url, status and timing
 app.use((req, res, next) => {

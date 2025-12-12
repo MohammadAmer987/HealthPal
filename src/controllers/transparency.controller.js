@@ -9,49 +9,76 @@ export const getTransparency = async (req, res) => {
   try {
     const caseId = req.params.caseId;
 
-    // 1) Case info
-    const caseInfo = await CaseModel.getCaseById(caseId);
+    // Validate caseId
+    if (!caseId) {
+      return res.status(400).json({ message: "Case ID is required" });
+    }
 
-    // 2) Patient info
-    const patientInfo = await PatientModel.getPatientById(caseInfo.patient_id);
+    // 1) Load case info first
+    const caseInfo = await CaseModel.findById(caseId);
 
-    // 3) Donations
-    const donations = await DonationModel.getDonationsByCase(caseId);
-    const total_donated = await DonationModel.getTotalDonations(caseId);
+    if (!caseInfo) {
+      return res.status(404).json({ message: "Case not found" });
+    }
 
-    // 4) Expenses
-    const expenses = await CaseExpense.getExpensesByCase(caseId);
-    const total_used = await CaseExpense.getTotalUsed(caseId);
-
-    // 5) Updates
-    const updates = await CaseUpdate.getUpdatesByCase(caseId);
-
-    // 6) Feedback
-    const feedback = await FeedbackModel.getFeedbackByCase(caseId);
-
-    // 7) Calculations
-    const remaining = total_donated - total_used;
-    const progress =
-      ((total_donated / caseInfo.goal_amount) * 100).toFixed(1) + "%";
-
-    res.json({
-      case_id: caseId,
-      case_title: caseInfo.title,
-      description: caseInfo.description,
-      goal_amount: caseInfo.goal_amount,
+    // 2) Load all related data in parallel
+    const [
+      patientInfo,
+      donations,
       total_donated,
+      expenses,
       total_used,
+      updates,
+      feedback
+    ] = await Promise.all([
+      PatientModel.getById(caseInfo.patient_id),
+      DonationModel.getDonationsByCase(caseId),
+      DonationModel.getTotalDonations(caseId),
+      CaseExpense.getExpensesByCase(caseId),
+      CaseExpense.getTotalUsed(caseId),
+      CaseUpdate.getByCase(caseId),
+      FeedbackModel.getFeedbackById(caseId)
+    ]);
+
+    // Validate patient exists
+    if (!patientInfo) {
+      return res.status(404).json({ message: "Patient not found" });
+    }
+
+    // 3) Safe calculations with fallbacks
+    const safe_total_donated = total_donated || 0;
+    const safe_total_used = total_used || 0;
+    const remaining = safe_total_donated - safe_total_used;
+    const progress = caseInfo.goal_amount > 0
+      ? ((safe_total_donated / caseInfo.goal_amount) * 100).toFixed(1) + "%"
+      : "0%";
+
+    // 4) Return formatted response
+    res.status(200).json({
+      case_id: caseId,
+      case_title: caseInfo?.title || "N/A",
+      description: caseInfo?.description || "N/A",
+      goal_amount: caseInfo?.goal_amount || 0,
+      total_donated: safe_total_donated,
+      total_used: safe_total_used,
       remaining,
       progress,
-      patient: patientInfo,
-      donations,
-      expenses,
-      updates,
-      feedback,
-      invoice_html_url: `/api/cases/${caseId}/invoice`,
+      patient: patientInfo || {},
+      donations: donations || [],
+      expenses: expenses || [],
+      updates: updates || [],
+      feedback: feedback || [],
+      invoice_html_url: `/api/cases/${caseId}/invoice`
     });
   } catch (err) {
-    console.error("Transparency Error:", err);
-    res.status(500).json({ message: "Server error", error: err });
+    console.error("Transparency Error - Full Details:", {
+      message: err.message,
+      stack: err.stack,
+      caseId: req.params.caseId
+    });
+    res.status(500).json({
+      message: "Failed to retrieve transparency data",
+      error: process.env.NODE_ENV === 'development' ? err.message : undefined
+    });
   }
 };

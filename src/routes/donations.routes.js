@@ -3,10 +3,10 @@ import {
     addDonation, 
     getDonationsByCase 
 } from "../controllers/donation.controller.js";
+import {  auth } from "../middleware/auth.js";
 
 const router = express.Router();
-
-router.post("/", addDonation);                        // Add donation
-router.get("/:case_id", getDonationsByCase);          // Get donations of case
+router.post("/",auth, addDonation);                        // Add donation
+router.get("/:case_id",auth, getDonationsByCase);          // Get donations of case
 
 export default router;

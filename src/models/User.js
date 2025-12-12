@@ -1,3 +1,5 @@
+import db from "../config/db.js";
+
 const User = {
   // Find by email
   findByEmail(email) {
@@ -12,8 +14,51 @@ const User = {
       );
     });
   },
+RoleProblem({ userId, role }) {
+  
+  return new Promise((resolve, reject) => {
+    
+    if (role === "patient") {
+      db.query(
+        `INSERT INTO patients (user_id, medical_history, birth_date)
+         VALUES (?, NULL, NULL)`,
+        [userId],
+        (err, result) => {
+          if (err) return reject(err);
+          resolve(result[0]);
+        }
+      );
+    }
 
-  // Create new user
+    else if (role === "doctor") {
+      db.query(
+        "INSERT INTO doctors (user_id) VALUES (?)",
+        [userId],
+        (err, result) => {
+          if (err) return reject(err);
+          resolve(result[0]);
+        }
+      );
+    }
+
+    else if (role === "ngo") {
+      db.query(
+        "INSERT INTO ngos (user_id) VALUES (?)",
+        [userId],
+        (err, result) => {
+          if (err) return reject(err);
+          resolve(result[0]);
+        }
+      );
+    }
+
+    else {
+      return reject(new Error("Invalid role"));
+    }
+
+  });
+}
+,
   create({ full_name, email, password, phone, role }) {
     return new Promise((resolve, reject) => {
       const sql = `

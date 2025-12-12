@@ -6,22 +6,22 @@ import {
   verifyNGO,
   getNGOById,
 } from "../controllers/ngo.controller.js";
-
+import { auth ,allowRoles} from "../middleware/auth.js";  
 const router = express.Router();
 
 // Create new NGO
-router.post("/", createNGO);
+router.post("/",auth,allowRoles("admin","ngo"), createNGO);
 
 // Get all NGOs
-router.get("/", getNGOs);
+router.get("/",auth,allowRoles("admin","ngo"), getNGOs);
 
 // Get verified NGOs
-router.get("/verified", getVerifiedNGOs);
+router.get("/verified",auth, getVerifiedNGOs);
 
 // Verify NGO (Admin ideally)
-router.patch("/:id/verify", verifyNGO);
+router.patch("/:id/verify",auth,allowRoles("admin"), verifyNGO);
 
 // Get NGO by ID
-router.get("/:id", getNGOById);
+router.get("/:id", auth, getNGOById);
 
 export default router;

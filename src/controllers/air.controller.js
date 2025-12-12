@@ -1,16 +1,30 @@
 import axios from "axios";
-import { getLocationByName } from "../models/Location.js";
+import { getLocationByName, getLocationById } from "../models/Location.js";
 
 export const getAirPollution = async (req, res) => {
   try {
+    // Accept either an id (preferred) or a city name for backwards-compatibility
+    const id = req.params.id;
     const city = req.params.city;
 
     // 1) جلب اللوكيشن من الداتابيس
-    const location = await getLocationByName(city);
-    if (!location)
-      return res.status(404).json({ message: "City not found" });
+    let location = null;
+    if (id != null) {
+      location = await getLocationById(id);
+      console.log("Location fetched by ID:", location);
+    } else if (city != null) {
+      location = await getLocationByName(city);
+    }
 
-    const { lat, lon } = location;
+    if (!location) return res.status(404).json({ message: "City not found" });
+
+    // Support different column names (lat/lon or latitude/longitude)
+    const lat = location.lat ?? location.latitude ?? location.lat_deg;
+    const lon = location.lon ?? location.longitude ?? location.lon_deg;
+
+    if (lat == null || lon == null) {
+      return res.status(500).json({ message: "Location coordinates missing" });
+    }
 
     // 2) استدعاء API الخارجي
     const url = `http://api.openweathermap.org/data/2.5/air_pollution?lat=${lat}&lon=${lon}&appid=${process.env.OPENWEATHER_API_KEY}`;

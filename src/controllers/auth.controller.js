@@ -9,27 +9,36 @@ export const register = async (req, res) => {
     if (!full_name || !email || !password)
       return res.status(400).json({ message: "Missing required fields" });
 
-    // Check if email exists
+    // Check existing email
     const existing = await User.findByEmail(email);
     if (existing) return res.status(409).json({ message: "Email already exists" });
 
-    // Hash password
     const hashed = await bcrypt.hash(password, 10);
-
-    // Create user
-    await User.create({
+console.log("ROLE RECEIVED:", role);
+    // STEP 1 — Create user
+    const result = await User.create({
       full_name,
       email,
       password: hashed,
       phone,
-      role: role || "patient"
+      role
     });
-
+console.log("ROLE RECEIVED:", role);
+    const userId = result.insertId;
+    
+    // STEP 2 — Create profile based on role
+    await User.RoleProblem({userId, role});
     res.status(201).json({ message: "User registered successfully" });
 
   } catch (err) {
     console.error("Register Error:", err);
     res.status(500).json({ message: "Server error" });
+    console.error("REGISTER ERROR:", err.message);
+  console.error(err);
+  console.log("ROLE RECEIVED:", role);
+
+  return res.status(500).json({ message: err.message });
+
   }
 };
 

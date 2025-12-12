@@ -5,19 +5,20 @@ import {
   getAllMedRequests,
   updateMedRequestStatus
 } from "../controllers/medRequest.controller.js";
+import { auth ,allowRoles} from "../middleware/auth.js";
 
 const router = express.Router();
 
 // 1) Create request
-router.post("/", createMedRequest);
+router.post("/", auth, allowRoles("patient"), createMedRequest);
 
 // 2) Get requests by patient
-router.get("/patient/:patient_id", getPatientRequests);
+router.get("/patient/:patient_id",auth,allowRoles("patient"), getPatientRequests);
 
 // 3) Get all requests (NGO/Admin)
-router.get("/", getAllMedRequests);
+router.get("/",auth,allowRoles("ngo","admin"), getAllMedRequests);
 
 // 4) Update request status
-router.patch("/:id/status", updateMedRequestStatus);
+router.patch("/:id/status", auth, allowRoles("ngo","admin"), updateMedRequestStatus);
 
 export default router;

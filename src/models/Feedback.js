@@ -1,4 +1,4 @@
-import { db } from "../config/db.js";
+import  db  from "../config/db.js";
 
  const addFeedback = (case_id, feedback, rating) => {
     return db.execute(

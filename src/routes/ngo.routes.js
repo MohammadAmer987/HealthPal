@@ -24,4 +24,4 @@ router.patch("/:id/verify", verifyNGO);
 // Get NGO by ID
 router.get("/:id", getNGOById);
 
-export default ngo;
+export default router;

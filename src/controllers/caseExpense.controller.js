@@ -1,5 +1,6 @@
-import { createExpense, getExpensesByCase, getTotalUsed } from "../models/CaseExpense.js";
+import CaseExpense from "../models/CaseExpense.js";
 
+// Add expense
 export const addExpense = async (req, res) => {
   try {
     const { case_id, amount_used, description } = req.body;
@@ -8,7 +9,7 @@ export const addExpense = async (req, res) => {
       return res.status(400).json({ message: "case_id and amount_used are required" });
     }
 
-    await createExpense({ case_id, amount_used, description });
+    await CaseExpense.createExpense({ case_id, amount_used, description });
 
     res.status(201).json({ message: "Expense added successfully" });
   } catch (err) {
@@ -17,12 +18,13 @@ export const addExpense = async (req, res) => {
   }
 };
 
+// Get expenses + total used amount
 export const getCaseExpenses = async (req, res) => {
   try {
     const caseId = req.params.caseId;
 
-    const expenses = await getExpensesByCase(caseId);
-    const total_used = await getTotalUsed(caseId);
+    const expenses = await CaseExpense.getExpensesByCase(caseId);
+    const total_used = await CaseExpense.getTotalUsed(caseId);
 
     res.json({
       case_id: caseId,

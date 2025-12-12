@@ -1,30 +1,21 @@
-import { generatePDF } from "../service/ExternalAPIs/HTML2PDF.js";
-import invoiceTemplate from "../templates/invoiceTemplate.js";
-import { getCaseById } from "../models/MedicalCase.js";
-import { getPatientById } from "../models/Patient.js";
-import { getDonationsByCase } from "../models/Donation.js";
-import { getExpensesByCase, getTotalUsed } from "../models/CaseExpense.js";
-import { getUpdatesByCase } from "../models/CaseUpdate.js";
-import { getFeedbackByCase } from "../models/Feedback.js";
-
 export const generateInvoice = async (req, res) => {
   try {
     const caseId = req.params.caseId;
 
-    // 1) Load all data (case, patient, donations, expenses...)
-  const caseInfo = await getCaseById(caseId);
-    const patient = await getPatientById(caseInfo.patient_id);
+    // 1) load all data
+    const caseInfo = await CaseModel.getCaseById(caseId);
+    const patient = await PatientModel.getPatientById(caseInfo.patient_id);
 
-    const donations = await getDonationsByCase(caseId);
-    const expenses = await getExpensesByCase(caseId);
-    const total_used = await getTotalUsed(caseId);
+    const donations = await DonationModel.getDonationsByCase(caseId);
+    const expenses = await CaseExpense.getExpensesByCase(caseId);
+    const total_used = await CaseExpense.getTotalUsed(caseId);
 
-    const updates = await getUpdatesByCase(caseId);
-    const feedback = await getFeedbackByCase(caseId);
+    const updates = await CaseUpdate.getUpdatesByCase(caseId);
+    const feedback = await FeedbackModel.getFeedbackByCase(caseId);
 
     const total_donated = donations.reduce((sum, d) => sum + d.amount, 0);
     const remaining = total_donated - total_used;
-    
+
     const html = invoiceTemplate({
       caseInfo,
       patient,
@@ -34,13 +25,13 @@ export const generateInvoice = async (req, res) => {
       feedback,
       total_donated,
       total_used,
-      remaining,
+      remaining
     });
 
-    // 2) استدعاء الـ External API من الـ service
+    // 2) generate pdf
     const pdfBuffer = await generatePDF(html);
 
-    // 3) إرجاع PDF للمستخدم
+    // 3) return pdf
     res.set({
       "Content-Type": "application/pdf",
       "Content-Disposition": `attachment; filename=invoice_case_${caseId}.pdf`,

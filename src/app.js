@@ -1,4 +1,8 @@
 import express from 'express';
+import fs from 'fs';
+import path from 'path';
+import logger from './utils/logger.js';
+
 import profileRoutes from './routes/Profile.js';
 import caseRoutes from "./routes/cases.routes.js";
 import donationRoutes from "./routes/donations.routes.js";
@@ -24,6 +28,40 @@ import consultationRoutes from './routes/consultations.routes.js';
 const app = express();
 
 app.use(express.json());
+// Ensure logs folder exists (logger writes files there)
+const logsDir = path.join(process.cwd(), 'logs');
+try {
+	if (!fs.existsSync(logsDir)) fs.mkdirSync(logsDir, { recursive: true });
+} catch (e) {
+	// fallback to console if logger not ready
+	console.error('Failed to create logs directory', e);
+}
+
+// Replace console methods to use Winston logger so existing console.* calls
+// across the codebase are captured in log files as well.
+/* eslint-disable no-console */
+console.log = (...args) => logger.info(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
+console.info = (...args) => logger.info(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
+console.warn = (...args) => logger.warn(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
+console.error = (...args) => logger.error(args.map(a => (typeof a === 'string' ? a : JSON.stringify(a))).join(' '));
+/* eslint-enable no-console */
+
+// Request logging middleware: logs method, url, status and timing
+app.use((req, res, next) => {
+	const start = Date.now();
+	res.on('finish', () => {
+		const duration = Date.now() - start;
+		logger.info({
+			msg: 'HTTP access',
+			method: req.method,
+			url: req.originalUrl || req.url,
+			status: res.statusCode,
+			duration_ms: duration,
+			ip: req.ip
+		});
+	});
+	next();
+});
 app.use("/cases", caseRoutes);
 app.use("/donations",donationRoutes);
 app.use("/case-updates", caseUpdatesRoutes);

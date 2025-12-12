@@ -1,5 +1,5 @@
 import CaseUpdate from "../models/CaseUpdate.js";
-import MedicalCase from "../models/Case.js";
+import MedicalCase from "../models/MedicalCase.js";
 
 // --------------- Add Update ----------------
 export const addCaseUpdate = async (req, res) => {

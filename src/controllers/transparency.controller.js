@@ -1,37 +1,38 @@
-import { getCaseById } from "../models/MedicalCase.js";
-import { getPatientById } from "../models/Patient.js";
-import { getDonationsByCase, getTotalDonations } from "../models/Donation.js";
-import { getExpensesByCase, getTotalUsed } from "../models/CaseExpense.js";
-import { getUpdatesByCase } from "../models/CaseUpdate.js";
-import { getFeedbackByCase } from "../models/Feedback.js";
+import CaseModel from "../models/MedicalCase.js";
+import PatientModel from "../models/Patient.js";
+import DonationModel from "../models/Donation.js";
+import CaseExpense from "../models/CaseExpense.js";
+import CaseUpdate from "../models/CaseUpdate.js";
+import FeedbackModel from "../models/Feedback.js";
 
 export const getTransparency = async (req, res) => {
   try {
     const caseId = req.params.caseId;
 
-    // 1) Get case info
-    const caseInfo = await getCaseById(caseId);
+    // 1) Case info
+    const caseInfo = await CaseModel.getCaseById(caseId);
 
-    // 2) Get patient info
-    const patientInfo = await getPatientById(caseInfo.patient_id);
+    // 2) Patient info
+    const patientInfo = await PatientModel.getPatientById(caseInfo.patient_id);
 
     // 3) Donations
-    const donations = await getDonationsByCase(caseId);
-    const total_donated = await getTotalDonations(caseId);
+    const donations = await DonationModel.getDonationsByCase(caseId);
+    const total_donated = await DonationModel.getTotalDonations(caseId);
 
     // 4) Expenses
-    const expenses = await getExpensesByCase(caseId);
-    const total_used = await getTotalUsed(caseId);
+    const expenses = await CaseExpense.getExpensesByCase(caseId);
+    const total_used = await CaseExpense.getTotalUsed(caseId);
 
     // 5) Updates
-    const updates = await getUpdatesByCase(caseId);
+    const updates = await CaseUpdate.getUpdatesByCase(caseId);
 
     // 6) Feedback
-    const feedback = await getFeedbackByCase(caseId);
+    const feedback = await FeedbackModel.getFeedbackByCase(caseId);
 
     // 7) Calculations
     const remaining = total_donated - total_used;
-    const progress = ((total_donated / caseInfo.goal_amount) * 100).toFixed(1) + "%";
+    const progress =
+      ((total_donated / caseInfo.goal_amount) * 100).toFixed(1) + "%";
 
     res.json({
       case_id: caseId,
@@ -42,18 +43,15 @@ export const getTransparency = async (req, res) => {
       total_used,
       remaining,
       progress,
-
       patient: patientInfo,
       donations,
       expenses,
       updates,
       feedback,
-
-      invoice_html_url: `/api/cases/${caseId}/invoice`
+      invoice_html_url: `/api/cases/${caseId}/invoice`,
     });
-
   } catch (err) {
-    console.error(err);
+    console.error("Transparency Error:", err);
     res.status(500).json({ message: "Server error", error: err });
   }
 };

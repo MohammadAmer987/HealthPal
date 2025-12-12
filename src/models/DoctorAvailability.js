@@ -1,4 +1,4 @@
-import db from "../config/db.js";
+import  db  from "../config/db.js";
 
 const DoctorAvailability = {
   create: (doctor_id, available_date, start_time, end_time) => {

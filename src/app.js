@@ -16,6 +16,7 @@ import medicineSupplyRoutes from "./routes/medicineSupply.routes.js";
 import medMatchRoutes from "./routes/medMatch.routes.js";
 import healthGuideRoutes from "./routes/healthGuides.routes.js";
 import airRoutes from "./routes/air.routes.js";
+import inventoryRoutes from "./routes/inventory.routes.js";
 
 const app = express();
 
@@ -37,8 +38,7 @@ app.use("/medicine-supply", medicineSupplyRoutes);
 app.use("/med-match", medMatchRoutes);
 app.use("/health-guides", healthGuideRoutes);
 app.use("/", airRoutes);
-
-
+app.use("/api/inventory", inventoryRoutes);
 
 
 export default app;
